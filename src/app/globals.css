@@ -1,26 +1,61 @@
 @import "tailwindcss";
 
+@theme {
+  --radius-4xl: 2rem;
+  --radius-5xl: 3rem;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f4f2ff;
+  --foreground: #3c3c3c;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: "din-round", sans-serif;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1; /* slate-300 */
+  border-radius: 20px;
+}
+
+@layer components {
+  .node-3d {
+    @apply relative active:translate-y-1 transition-all duration-75;
+  }
+
+  .node-shadow-green {
+    @apply border-b-[8px] border-emerald-600 bg-emerald-500 active:border-b-0;
+  }
+  .node-shadow-blue {
+    @apply border-b-[8px] border-blue-600 bg-blue-400 active:border-b-0;
+  }
+  .node-shadow-purple {
+    @apply border-b-[8px] border-violet-700 bg-violet-600 active:border-b-0;
+  }
+  .node-shadow-gray {
+    @apply border-b-[8px] border-slate-300 bg-slate-200 active:border-b-0;
+  }
+
+  .unit-card-shadow {
+    @apply shadow-[0_8px_0_rgba(0,0,0,0.1)];
+  }
 }
