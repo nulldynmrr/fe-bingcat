@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -12,35 +12,72 @@ import {
   Bot,
 } from "lucide-react";
 import Link from "next/link";
-// Mengimpor komponen StatRow
+import Image from "next/image";
+import request from "@/utils/request";
 import StatRow from "@/components/ui/StatRow";
 
 export default function ChapterIntroPage({ params }) {
-  // Dalam implementasi nyata, chapterId didapat dari params
   const chapterId = params?.chapterId || "1";
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  // --- DUMMY DATA ---
-  const chapterDetails = {
-    id: chapterId,
-    title: "Communicative Competence",
-    part: "Part A",
-    description:
-      "Pelajari cara merespons percakapan pendek dalam bahasa Inggris dengan tepat dan cepat. Anda akan mendengarkan dialog singkat dan menentukan maksud atau konteks pembicaraan.",
-    objectives: [
-      "Memahami konteks pembicaraan.",
-      "Mengidentifikasi maksud dari pembicara kedua.",
-      "Menghindari jebakan kata yang mirip (similar sounds).",
-    ],
-    rewards: {
-      xp: 50,
-      gems: 5,
-    },
-    estimatedTime: "10 Menit",
-    color: "bg-violet-500",
-    shadow: "border-violet-600",
-    lightBg: "bg-violet-50",
-    textColor: "text-violet-500",
-  };
+  useEffect(() => {
+    const fetchChapter = async () => {
+      try {
+        const response = await request.get(`/user/chapters/${chapterId}`);
+        if (response.data.status === "success") {
+          setData(response.data.data);
+        } else {
+          setError(true);
+        }
+      } catch (err) {
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchChapter();
+  }, [chapterId]);
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center bg-[#f4f7fa]">
+        <div className="w-12 h-12 border-4 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <main className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-[#f4f7fa]">
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+        >
+          <div className="relative w-48 h-48 mx-auto mb-6">
+            <Image
+              src="/assets/maskot bincat.png"
+              alt="Empty State"
+              fill
+              className="grayscale opacity-50 object-contain"
+            />
+          </div>
+          <h2 className="text-2xl font-black text-slate-400 mb-2">
+            Ups! Bab Belum Tersedia
+          </h2>
+          <p className="text-slate-400 font-bold mb-8">
+            binCat belum menyiapkan materi untuk bab ini, Meow!
+          </p>
+          <Link href="/home">
+            <button className="px-8 py-3 bg-violet-500 text-white rounded-2xl font-black shadow-[0_4px_0_#5b21b6] active:translate-y-1 active:shadow-none transition-all">
+              KEMBALI KE PETA
+            </button>
+          </Link>
+        </motion.div>
+      </main>
+    );
+  }
 
   return (
     <>
@@ -62,9 +99,7 @@ export default function ChapterIntroPage({ params }) {
 
             <div className="flex flex-col md:flex-row gap-10 items-start relative z-10">
               <div className="w-full md:w-1/2">
-                <div
-                  className={`w-24 h-24 ${chapterDetails.color} rounded-3xl rotate-3 mb-8 flex items-center justify-center shadow-lg border-b-[6px] ${chapterDetails.shadow}`}
-                >
+                <div className="w-24 h-24 bg-violet-500 rounded-3xl rotate-3 mb-8 flex items-center justify-center shadow-lg border-b-[6px] border-violet-600">
                   <BookOpen
                     className="w-10 h-10 text-white -rotate-3"
                     strokeWidth={2.5}
@@ -72,18 +107,20 @@ export default function ChapterIntroPage({ params }) {
                 </div>
 
                 <h2 className="text-xs font-black uppercase tracking-widest text-violet-500 mb-2">
-                  CHAPTER {chapterDetails.id} • {chapterDetails.part}
+                  CHAPTER {data.chapter_id} • MATERI UTAMA
                 </h2>
                 <h1 className="text-4xl font-extrabold text-slate-800 leading-tight mb-4 tracking-tight">
-                  {chapterDetails.title}
+                  Materi Pembelajaran
                 </h1>
                 <p className="text-slate-500 text-sm font-medium leading-relaxed mb-6">
-                  {chapterDetails.description}
+                  Selesaikan total {data.total_questions} pertanyaan untuk
+                  menguasai bab ini. Dapatkan XP dan Gems maksimal dengan
+                  menjawab semua soal dengan benar.
                 </p>
 
                 <div className="flex items-center gap-2 text-slate-400 text-xs font-bold bg-slate-50 inline-flex px-4 py-2 rounded-xl">
                   <Clock className="w-4 h-4" /> Estimasi waktu:{" "}
-                  {chapterDetails.estimatedTime}
+                  {data.time_estimate}
                 </div>
               </div>
 
@@ -99,17 +136,13 @@ export default function ChapterIntroPage({ params }) {
                     </h3>
                   </div>
                   <ul className="space-y-3">
-                    {chapterDetails.objectives.map((obj, idx) => (
+                    {data.targets.map((obj, idx) => (
                       <li
                         key={idx}
                         className="flex gap-3 items-start bg-slate-50 p-4 rounded-2xl border border-slate-100"
                       >
-                        <div
-                          className={`mt-0.5 w-6 h-6 rounded-full ${chapterDetails.lightBg} flex items-center justify-center shrink-0`}
-                        >
-                          <Star
-                            className={`w-3 h-3 ${chapterDetails.textColor} fill-current`}
-                          />
+                        <div className="mt-0.5 w-6 h-6 rounded-full bg-violet-50 flex items-center justify-center shrink-0">
+                          <Star className="w-3 h-3 text-violet-500 fill-current" />
                         </div>
                         <span className="text-sm font-bold text-slate-600 leading-snug">
                           {obj}
@@ -126,7 +159,7 @@ export default function ChapterIntroPage({ params }) {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-amber-50 border border-amber-100 p-4 rounded-2xl flex flex-col items-center justify-center">
                       <span className="text-2xl font-black text-amber-500 mb-1">
-                        +{chapterDetails.rewards.xp}
+                        +{data.rewards_potential.xp}
                       </span>
                       <span className="text-[10px] font-black text-amber-600/60 uppercase tracking-wider">
                         XP Points
@@ -136,7 +169,7 @@ export default function ChapterIntroPage({ params }) {
                       <div className="flex items-center gap-1 mb-1">
                         <Gem className="w-5 h-5 text-blue-500 fill-blue-500" />
                         <span className="text-2xl font-black text-blue-500">
-                          +{chapterDetails.rewards.gems}
+                          +{data.rewards_potential.gems}
                         </span>
                       </div>
                       <span className="text-[10px] font-black text-blue-600/60 uppercase tracking-wider">
@@ -150,12 +183,10 @@ export default function ChapterIntroPage({ params }) {
 
             <div className="mt-12 pt-8 border-t border-slate-100 flex justify-end">
               <Link
-                href={`/learn/${chapterId}/quiz/1`}
+                href={`/learn/quiz/${chapterId}/1`}
                 className="w-full md:w-auto"
               >
-                <button
-                  className={`w-full md:w-64 py-4 rounded-2xl font-black text-lg uppercase tracking-widest text-white transition-all active:translate-y-1 active:border-b-0 ${chapterDetails.color} border-b-[6px] ${chapterDetails.shadow} hover:brightness-110 shadow-lg`}
-                >
+                <button className="w-full md:w-64 py-4 rounded-2xl font-black text-lg uppercase tracking-widest text-white transition-all active:translate-y-1 active:border-b-0 bg-violet-500 border-b-[6px] border-violet-600 hover:brightness-110 shadow-lg">
                   Mulai Belajar
                 </button>
               </Link>
@@ -179,13 +210,17 @@ export default function ChapterIntroPage({ params }) {
         </div>
 
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-50">
-          <h3 className="font-bold text-slate-800 mb-4">Statistik Harian</h3>
+          <h3 className="font-bold text-slate-800 mb-4">Detail Bab</h3>
           <StatRow
-            label="Target Harian"
-            value="1/3 Bab"
+            label="Jumlah Soal"
+            value={data.total_questions}
             color="text-slate-800"
           />
-          <StatRow label="Total XP" value="1,250" color="text-violet-500" />
+          <StatRow
+            label="Maksimal XP"
+            value={`+${data.rewards_potential.xp}`}
+            color="text-violet-500"
+          />
         </div>
       </aside>
     </>

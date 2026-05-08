@@ -31,7 +31,7 @@ export default function LoginPage() {
         localStorage.setItem("user_data", JSON.stringify(resData.data.user));
 
         if (resData.data.role === "admin") {
-          router.push("/admin/dashboard");
+          router.push("/administrator/dashboard");
         } else {
           if (!resData.data.user.onboarding_level) {
             router.push("/onboarding");

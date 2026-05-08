@@ -182,7 +182,7 @@ export default function ChapterIntroPage({ params }) {
 
             <div className="mt-12 pt-8 border-t border-slate-100 flex justify-end">
               <Link
-                href={`/learn/${chapterId}/quiz/1`}
+                href={`/learn/quiz/${chapterId}/1`}
                 className="w-full md:w-auto"
               >
                 <button className="w-full md:w-64 py-4 rounded-2xl font-black text-lg uppercase tracking-widest text-white transition-all active:translate-y-1 active:border-b-0 bg-violet-500 border-b-[6px] border-violet-600 hover:brightness-110 shadow-lg">

@@ -37,7 +37,7 @@ export default function AdminSidebar() {
         </div>
         <div>
           <h1 className="text-xl font-bold tracking-tight text-white leading-none">
-            EPrT Admin
+            Admin
           </h1>
           <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase tracking-widest">
             Management System
