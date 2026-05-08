@@ -1,13 +1,30 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Map, BookA, Trophy, User, Bot } from "lucide-react";
+import request from "@/utils/request";
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [userProfile, setUserData] = useState(null);
+
+  const fetchShortProfile = async () => {
+    try {
+      const response = await request.get("/user/profile");
+      if (response.data.status === "success") {
+        setUserData(response.data.data);
+      }
+    } catch (error) {
+      console.error("Gagal sinkronisasi profil di sidebar:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchShortProfile();
+  }, []);
 
   const navItems = [
     { path: "/home", icon: Map, label: "Map" },
@@ -64,22 +81,30 @@ export default function Sidebar() {
               src="/assets/maskot bincat.png"
               alt="binCat Mascot"
               fill
+              sizes="(max-width: 768px) 100vw, 112px"
+              priority={true}
               className="object-contain"
             />
           </div>
           <h3 className="font-bold text-slate-800 text-sm mt-10">
-            Keep going!
+            {userProfile
+              ? `Keep it up, ${userProfile.full_name.split(" ")[0]}!`
+              : "Keep going!"}
           </h3>
           <p className="text-xs text-slate-500 mt-1 mb-2">
             Every step makes you better ✨
           </p>
         </div>
 
-        <button className="w-full mt-4 bg-violet-600 hover:bg-violet-700 text-white rounded-2xl p-3 flex flex-col items-center justify-center shadow-[0_4px_0_#5b21b6] active:translate-y-1 active:shadow-none transition-all">
-          <Bot className="w-6 h-6 mb-1" />
-          <span className="font-bold text-sm">AI Tutor</span>
-          <span className="text-[10px] text-violet-200">Ask me anything!</span>
-        </button>
+        <Link href="/tanyaAI" className="w-full">
+          <button className="w-full mt-4 bg-violet-600 hover:bg-violet-700 text-white rounded-2xl p-3 flex flex-col items-center justify-center shadow-[0_4px_0_#5b21b6] active:translate-y-1 active:shadow-none transition-all">
+            <Bot className="w-6 h-6 mb-1" />
+            <span className="font-bold text-sm">AI Tutor</span>
+            <span className="text-[10px] text-violet-200">
+              Ask me anything!
+            </span>
+          </button>
+        </Link>
       </div>
     </aside>
   );

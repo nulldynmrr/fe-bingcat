@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   MessageSquare,
   Users,
@@ -15,89 +15,62 @@ import {
   Bot,
 } from "lucide-react";
 import StatRow from "@/components/ui/StatRow";
-
-const chapters = [
-  {
-    id: 1,
-    chapter: "Chapter 1",
-    title: "Communicative Competence – Part A",
-    progress: 100,
-    status: "completed",
-    color: "bg-violet-500",
-    shadow: "border-violet-600",
-    icon: <MessageSquare className="w-6 h-6 text-white" fill="currentColor" />,
-    indent: "ml-0",
-  },
-  {
-    id: 2,
-    chapter: "Chapter 2",
-    title: "Communicative Competence – Part B",
-    progress: 0,
-    status: "locked",
-    color: "bg-emerald-400",
-    shadow: "border-emerald-500",
-    icon: <Users className="w-6 h-6 text-white" fill="currentColor" />,
-    indent: "ml-12",
-  },
-  {
-    id: 3,
-    chapter: "Chapter 3",
-    title: "Communicative Competence – Part C",
-    progress: 0,
-    status: "locked",
-    color: "bg-amber-400",
-    shadow: "border-amber-500",
-    icon: <Book className="w-6 h-6 text-white" fill="currentColor" />,
-    indent: "ml-0",
-  },
-  {
-    id: 4,
-    chapter: "Chapter 4",
-    title: "Grammar – Part A",
-    progress: 0,
-    status: "locked",
-    color: "bg-blue-400",
-    shadow: "border-blue-500",
-    icon: <span className="text-white font-bold text-2xl">G</span>,
-    indent: "ml-12",
-  },
-  {
-    id: 5,
-    chapter: "Chapter 5",
-    title: "Grammar – Part B",
-    progress: 0,
-    status: "locked",
-    color: "bg-rose-400",
-    shadow: "border-rose-500",
-    icon: <PenTool className="w-6 h-6 text-white" fill="currentColor" />,
-    indent: "ml-0",
-  },
-  {
-    id: 6,
-    chapter: "Chapter 6",
-    title: "Reading Comprehension",
-    progress: 0,
-    status: "locked",
-    color: "bg-violet-500",
-    shadow: "border-violet-600",
-    icon: <BookOpen className="w-6 h-6 text-white" fill="currentColor" />,
-    indent: "ml-12",
-  },
-];
+import request from "@/utils/request";
 
 export default function HomePage() {
+  const [userData, setUserData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchDashboardData = async () => {
+    try {
+      const response = await request.get("/user/dashboard");
+      if (response.data.status === "success") {
+        setUserData(response.data.data);
+      }
+    } catch (error) {
+      console.error("Gagal mengambil data dashboard:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const getChapterIcon = (id) => {
+    const icons = {
+      1: <MessageSquare className="w-6 h-6 text-white" fill="currentColor" />,
+      2: <Users className="w-6 h-6 text-white" fill="currentColor" />,
+      3: <Book className="w-6 h-6 text-white" fill="currentColor" />,
+      4: <span className="text-white font-bold text-2xl">G</span>,
+      5: <PenTool className="w-6 h-6 text-white" fill="currentColor" />,
+      6: <BookOpen className="w-6 h-6 text-white" fill="currentColor" />,
+    };
+    return (
+      icons[id] || (
+        <BookOpen className="w-6 h-6 text-white" fill="currentColor" />
+      )
+    );
+  };
+
+  if (isLoading)
+    return (
+      <div className="flex-1 flex items-center justify-center font-bold text-violet-500">
+        Loading binCat...
+      </div>
+    );
+
+  const { profile, map_progress, streak } = userData;
+
   return (
     <>
       <main className="flex-1 relative overflow-y-auto no-scrollbar flex flex-col text-slate-800">
-        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden bg-gradient-to-b from-blue-50/50 to-[#f4f7fa]">
-          <div className="absolute top-[200px] -left-[10%] w-[120%] h-[500px] bg-gradient-to-b from-green-100/40 to-transparent rounded-[100%] blur-3xl"></div>
-        </div>
-
         <div className="relative z-10 px-8 pt-8 pb-32 max-w-2xl mx-auto w-full">
           <div className="flex justify-between items-end mb-12">
             <div>
               <p className="text-sm font-semibold text-slate-500 mb-1">
-                Good morning, Rizky! 👋
+                Good morning, {profile.full_name}! 👋
               </p>
               <h2 className="text-3xl font-extrabold text-slate-800 tracking-tight leading-tight">
                 Let's improve your
@@ -130,20 +103,16 @@ export default function HomePage() {
               </svg>
             </div>
 
-            {chapters.map((ch) => (
+            {/* Loop Map Progress dari Database */}
+            {map_progress.map((ch, index) => (
               <div
-                key={ch.id}
-                className={`relative flex items-center w-full max-w-sm ${ch.indent}`}
+                key={ch.chapter_id}
+                className={`relative flex items-center w-full max-w-sm ${index % 2 !== 0 ? "ml-12" : "ml-0"}`}
               >
                 <div
-                  className={`absolute -left-6 z-20 w-20 h-20 rounded-full flex items-center justify-center border-b-[6px] shadow-lg transition-transform cursor-pointer ${ch.color} ${ch.shadow} ${
-                    ch.status === "locked"
-                      ? "opacity-70 saturate-50"
-                      : "hover:-translate-y-1"
-                  }`}
+                  className={`absolute -left-6 z-20 w-20 h-20 rounded-full flex items-center justify-center border-b-[6px] shadow-lg transition-transform cursor-pointer bg-violet-500 border-violet-600 ${ch.status === "locked" ? "opacity-70 saturate-50" : "hover:-translate-y-1"}`}
                 >
-                  {ch.icon}
-
+                  {getChapterIcon(ch.chapter_id)}
                   <div className="absolute -bottom-2 right-0 w-7 h-7 rounded-full bg-white border-2 border-slate-100 flex items-center justify-center shadow-sm">
                     {ch.status === "completed" ? (
                       <Check
@@ -157,56 +126,37 @@ export default function HomePage() {
                 </div>
 
                 <div
-                  className={`ml-8 w-full bg-white/90 backdrop-blur-sm border ${
-                    ch.status === "completed"
-                      ? "border-violet-200 shadow-[0_0_20px_rgba(139,92,246,0.15)]"
-                      : "border-slate-100 shadow-sm"
-                  } rounded-3xl p-5 pl-10 relative`}
+                  className={`ml-8 w-full bg-white/90 backdrop-blur-sm border ${ch.status === "completed" ? "border-violet-200 shadow-[0_0_20px_rgba(139,92,246,0.15)]" : "border-slate-100 shadow-sm"} rounded-3xl p-5 pl-10 relative`}
                 >
                   {ch.status === "completed" && (
                     <span className="absolute top-2 right-4 text-xl">👑</span>
                   )}
-
                   <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                    {ch.chapter}
+                    Chapter {ch.chapter_id}
                   </p>
                   <h4 className="font-bold text-slate-800 text-sm leading-snug mb-3 pr-6">
-                    {ch.title}
+                    Materi Bab {ch.chapter_id}
                   </h4>
-
                   <div className="flex items-center gap-3">
                     <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full ${
-                          ch.status === "completed"
-                            ? "bg-violet-500"
-                            : "bg-slate-300"
-                        }`}
-                        style={{ width: `${ch.progress}%` }}
+                        className={`h-full rounded-full ${ch.status === "completed" ? "bg-violet-500" : "bg-slate-300"}`}
+                        style={{ width: `${ch.progress_percent}%` }}
                       ></div>
                     </div>
                     <span className="text-[10px] font-bold text-slate-400">
-                      {ch.progress}%
+                      {ch.progress_percent}%
                     </span>
                   </div>
                 </div>
               </div>
             ))}
-
-            <div className="mt-8 bg-white border border-slate-100 shadow-sm rounded-3xl p-4 flex items-center justify-between w-full max-w-sm cursor-pointer hover:shadow-md transition-all">
-              <div className="flex items-center gap-4">
-                <div className="text-3xl">🧰</div>
-                <span className="font-semibold text-sm text-slate-700 w-40">
-                  Complete chapters to unlock rewards!
-                </span>
-              </div>
-              <ChevronRight className="text-slate-400 w-5 h-5" />
-            </div>
           </div>
         </div>
       </main>
 
       <aside className="w-[320px] bg-transparent border-l border-slate-100 hidden xl:flex flex-col p-6 space-y-6 overflow-y-auto no-scrollbar z-10 relative text-slate-800">
+        {/* Daily Goal Section */}
         <div className="bg-white rounded-3xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-slate-50">
           <div className="flex justify-between items-center mb-6">
             <h3 className="font-bold text-slate-800">Daily Goal</h3>
@@ -233,73 +183,73 @@ export default function HomePage() {
                   stroke="#8b5cf6"
                   strokeWidth="12"
                   strokeDasharray="351"
-                  strokeDashoffset="0"
+                  strokeDashoffset={351 - (351 * Math.min(profile.xp, 15)) / 15}
                   strokeLinecap="round"
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <Target className="w-5 h-5 text-slate-300 mb-1" />
                 <div className="flex items-baseline gap-1">
-                  <span className="text-2xl font-black text-slate-800">15</span>
+                  <span className="text-2xl font-black text-slate-800">
+                    {profile.xp > 15 ? 15 : profile.xp}
+                  </span>
                   <span className="text-xs font-bold text-slate-400">/ 15</span>
                 </div>
                 <span className="text-[10px] font-bold text-slate-400">XP</span>
               </div>
             </div>
             <p className="mt-4 text-xs font-bold text-emerald-500 flex items-center gap-1">
-              Goal completed! 🎉
+              {profile.xp >= 15 ? "Goal completed! 🎉" : "Keep going! 💪"}
             </p>
           </div>
         </div>
 
+        {/* Current Streak Section (Real dari Database) */}
         <div className="bg-white rounded-3xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-slate-50">
           <h3 className="font-bold text-slate-800 mb-4">Current Streak</h3>
           <div className="flex items-end gap-2 mb-6">
             <Flame className="w-8 h-8 text-orange-500 fill-orange-500" />
             <span className="text-3xl font-black text-slate-800 leading-none">
-              12
+              {streak.count}
             </span>
             <span className="text-sm font-bold text-slate-400 mb-1">days</span>
           </div>
           <div className="flex justify-between w-full">
-            {["M", "T", "W", "T", "F", "S", "S"].map((day, i) => (
+            {streak.checklist.map((item, i) => (
               <div key={i} className="flex flex-col items-center gap-2">
                 <span className="text-[10px] font-bold text-slate-400">
-                  {day}
+                  {item.day}
                 </span>
-                {i < 5 ? (
-                  <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-sm shadow-emerald-200">
-                    <Check className="w-4 h-4" strokeWidth={3} />
-                  </div>
-                ) : i === 5 ? (
-                  <div className="w-6 h-6 rounded-full bg-amber-400 flex items-center justify-center text-white shadow-sm shadow-amber-200">
-                    <Check className="w-4 h-4" strokeWidth={3} />
-                  </div>
-                ) : (
-                  <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-300">
-                    <Check className="w-4 h-4" strokeWidth={3} />
-                  </div>
-                )}
+                <div
+                  className={`w-6 h-6 rounded-full flex items-center justify-center text-white shadow-sm ${item.completed ? "bg-emerald-500 shadow-emerald-200" : "bg-slate-100 text-slate-300"}`}
+                >
+                  <Check className="w-4 h-4" strokeWidth={3} />
+                </div>
               </div>
             ))}
           </div>
         </div>
 
+        {/* Your Stats Section (Real dari Profile) */}
         <div className="bg-white rounded-3xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-slate-50">
           <h3 className="font-bold text-slate-800 mb-4">Your Stats</h3>
           <div className="space-y-4">
-            <StatRow label="Total XP" value="1,250" color="text-violet-500" />
             <StatRow
-              label="Chapters Done"
-              value="1 / 6"
+              label="Total XP"
+              value={profile.xp.toLocaleString()}
+              color="text-violet-500"
+            />
+            <StatRow
+              label="Current Level"
+              value={`Level ${profile.level}`}
               color="text-slate-800"
             />
+            <StatRow label="Gems" value={profile.gems} color="text-blue-500" />
             <StatRow
-              label="Questions Answered"
-              value="40"
-              color="text-blue-500"
+              label="Status"
+              value={profile.streak_count > 0 ? "🔥 On Fire" : "💤 Chilling"}
+              color="text-emerald-500"
             />
-            <StatRow label="Accuracy" value="78%" color="text-emerald-500" />
           </div>
         </div>
 
@@ -313,8 +263,8 @@ export default function HomePage() {
             </div>
           </div>
           <p className="text-xs text-violet-900 leading-relaxed mb-4 font-medium">
-            Try to review your incorrect answers. It's the fastest way to
-            improve!
+            Keep up your {streak.count} day streak,{" "}
+            {profile.full_name.split(" ")[0]}! You're doing great.
           </p>
           <button className="w-full bg-white text-violet-700 font-bold text-xs py-3 rounded-xl border border-violet-100 flex items-center justify-center gap-2 hover:bg-violet-100 transition-colors">
             Let's practice! <ChevronRight className="w-3 h-3" />

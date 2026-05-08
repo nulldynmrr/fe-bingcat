@@ -3,10 +3,14 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import request from "@/utils/request";
 
 export default function OnboardingPage() {
+  const router = useRouter();
   const [selectedLevel, setSelectedLevel] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const levels = [
     {
@@ -56,6 +60,30 @@ export default function OnboardingPage() {
     show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300 } },
   };
 
+  const handleContinue = async () => {
+    if (!selectedLevel) return;
+
+    setIsLoading(true);
+    setErrorMsg("");
+
+    try {
+      const response = await request.put("/user/onboarding", {
+        level: selectedLevel,
+      });
+
+      if (response.data.status === "success") {
+        router.push("/home");
+      }
+    } catch (error) {
+      const message =
+        error.response?.data?.message ||
+        "Gagal menyimpan data. Silakan coba lagi.";
+      setErrorMsg(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="h-screen w-screen bg-violet-50 flex justify-center items-center overflow-hidden sm:p-6 font-sans">
       <div className="w-full max-w-md h-full sm:h-auto sm:max-h-[95vh] bg-white sm:rounded-[2.5rem] shadow-2xl flex flex-col relative overflow-hidden px-6 pt-8 pb-6 border border-slate-100">
@@ -93,6 +121,13 @@ export default function OnboardingPage() {
             </p>
           </motion.div>
         </div>
+
+        {/* Tampilkan error jika API gagal */}
+        {errorMsg && (
+          <div className="mb-4 p-3 bg-red-100 text-red-600 text-sm font-medium rounded-xl text-center shrink-0">
+            {errorMsg}
+          </div>
+        )}
 
         <motion.div
           variants={containerVariants}
@@ -144,18 +179,18 @@ export default function OnboardingPage() {
         </motion.div>
 
         <div className="pt-6 shrink-0">
-          <Link href="/home" className="block w-full">
-            <button
-              disabled={!selectedLevel}
-              className={`w-full py-4 rounded-2xl font-black text-base tracking-widest uppercase flex justify-center items-center gap-2 transition-all outline-none ${
-                selectedLevel
-                  ? "bg-violet-500 text-white border-b-[6px] border-violet-700 hover:bg-violet-400 active:border-b-0 active:translate-y-[6px]"
-                  : "bg-slate-200 text-slate-400 border-b-[6px] border-slate-300 cursor-not-allowed"
-              }`}
-            >
-              Lanjutkan
-            </button>
-          </Link>
+          {/* Tag Link dihapus, diganti onClick pada button */}
+          <button
+            onClick={handleContinue}
+            disabled={!selectedLevel || isLoading}
+            className={`w-full py-4 rounded-2xl font-black text-base tracking-widest uppercase flex justify-center items-center gap-2 transition-all outline-none ${
+              selectedLevel && !isLoading
+                ? "bg-violet-500 text-white border-b-[6px] border-violet-700 hover:bg-violet-400 active:border-b-0 active:translate-y-[6px]"
+                : "bg-slate-200 text-slate-400 border-b-[6px] border-slate-300 cursor-not-allowed"
+            }`}
+          >
+            {isLoading ? "MENYIMPAN..." : "Lanjutkan"}
+          </button>
         </div>
       </div>
     </div>
